@@ -1,3 +1,4 @@
+#pragma once
 #ifndef OPENWIDGET_H
 #define OPENWIDGET_H
 
@@ -12,6 +13,8 @@ class openwidget : public QWidget
     Q_OBJECT
 public:
     explicit openwidget(QWidget *parent = nullptr);
+    static openwidget &getinstance();
+    friends *getfriend();
 
 signals:
 

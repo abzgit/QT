@@ -1,8 +1,10 @@
+#pragma once
 #ifndef TCPCLIENT_H
 #define TCPCLIENT_H
 
 #include <QWidget>
 #include <QTcpSocket>
+#include "protocol.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Tcpclient;
@@ -17,6 +19,9 @@ public:
     Tcpclient(QWidget *parent = nullptr);
     ~Tcpclient();
     void loadconfig();
+    static Tcpclient& getinstance();
+    QTcpSocket& gettcpsocket();
+
 
 private:
     Ui::Tcpclient *ui;

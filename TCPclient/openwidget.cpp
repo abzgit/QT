@@ -22,3 +22,14 @@ openwidget::openwidget(QWidget *parent)
 
     connect(mlistw,SIGNAL(currentRowChanged(int)),m_staw,SLOT(setCurrentIndex(int)));
 }
+
+openwidget &openwidget::getinstance()
+{
+    static openwidget instance;
+    return instance;
+}
+
+friends *openwidget::getfriend()
+{
+    return m_friend;
+}

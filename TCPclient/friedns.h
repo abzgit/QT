@@ -1,3 +1,4 @@
+#pragma once
 #ifndef FRIEDNS_H
 #define FRIEDNS_H
 
@@ -10,11 +11,13 @@
 #include<QHBoxLayout>
 #include "online.h"
 
+
 class friends : public QWidget
 {
     Q_OBJECT
 public:
     explicit friends(QWidget *parent = nullptr);
+    void showonlineuse(pdu *Pdu);
 public slots:
     void showonline();
 

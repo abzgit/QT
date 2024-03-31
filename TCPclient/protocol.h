@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 #include <stdlib.h>
@@ -10,12 +11,19 @@ enum msg_type{
     msg_type_min = 0,
     msg_type_regist_request,
     msg_type_regist_respond,
+
     msg_type_login_request,
     msg_type_login_respond,
+
     msg_type_cancle_request,
     msg_type_cancle_respond,
-    // msg_type_regist_request,
-    // msg_type_regist_respond,
+
+    msg_type_online_request,
+    msg_type_online_respond,
+
+    msg_type_search_request,
+    msg_type_search_respond,
+
     msg_type_max = 0x00ffffff
 };
 

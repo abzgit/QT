@@ -1,5 +1,6 @@
 #include "friedns.h"
 #include "online.h"
+#include "tcpclient.h"
 
 friends ::friends(QWidget *parent)
     : QWidget{parent}
@@ -43,11 +44,26 @@ friends ::friends(QWidget *parent)
     connect(m_onlineuser,SIGNAL(clicked(bool)),this,SLOT(showonline()));
 }
 
+void friends::showonlineuse(pdu *Pdu)
+{
+    if(Pdu == NULL){
+        return;
+    }
+    qDebug()<<"had showuse";
+    m_online->showuse(Pdu);
+}
 void friends::showonline()
 {
     if(m_online->isHidden()){
         m_online->show();
+        pdu *Pdu = mkpud(0);
+        Pdu->uiMsgType = msg_type_online_request;
+        Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+        free(Pdu);
+        Pdu = NULL;
     }else{
         m_online->hide();
     }
 }
+
+

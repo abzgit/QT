@@ -1,8 +1,9 @@
 #include "tcpclient.h"
 #include "ui_tcpclient.h"
-#include "protocol.h"
 #include <QFile>
 #include <QMessageBox>
+#include "openwidget.h"
+#include <QDebug>
 
 Tcpclient::Tcpclient(QWidget *parent)
     : QWidget(parent)
@@ -36,6 +37,17 @@ void Tcpclient::loadconfig()
     }
 }
 
+Tcpclient &Tcpclient::getinstance()
+{
+    static Tcpclient instance;
+    return instance;
+}
+
+QTcpSocket &Tcpclient::gettcpsocket()
+{
+    return m_sock;
+}
+
 void Tcpclient::showconnect()
 {
     QMessageBox::information(this,"连接服务器","连接成功");
@@ -43,7 +55,6 @@ void Tcpclient::showconnect()
 
 void Tcpclient::recvmag()
 {
-    qDebug()<<m_sock.bytesAvailable();
     uint uiPduLen = 0;
     m_sock.read((char*)&uiPduLen,sizeof(uint));
     uint uiMsgLen = uiPduLen - sizeof(pdu);
@@ -59,17 +70,23 @@ void Tcpclient::recvmag()
         }else if(0 == strcmp(Pdu->caData,"regist failed!name exited!")){
             QMessageBox::warning(this,"注册","regist failed!name exited!");
         }
-
         break;
     }
     case msg_type_login_respond:
     {
         if(0 == strcmp(Pdu->caData,"login ok!")){
             QMessageBox::information(this,"登录","登录成功");
+            openwidget::getinstance().show();
+            this->hide();
         }else if(0 == strcmp(Pdu->caData,"no account!")){
             QMessageBox::warning(this,"登录","用户名或密码错误!或已经登录");
         }
-
+        break;
+    }
+    case msg_type_online_respond:{
+        qDebug()<<msg_type_online_respond;
+        openwidget::getinstance().getfriend()->showonlineuse(Pdu);
+        qDebug()<<Pdu->uiMsgType;
         break;
     }
     default:
