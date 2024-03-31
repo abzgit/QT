@@ -21,13 +21,14 @@ public:
     void loadconfig();
     static Tcpclient& getinstance();
     QTcpSocket& gettcpsocket();
-
+    QString getlogname();
 
 private:
     Ui::Tcpclient *ui;
     QString m_ip;
     qint16 m_port;
     QTcpSocket m_sock;
+    QString logname;
 
 public slots:
     void showconnect();

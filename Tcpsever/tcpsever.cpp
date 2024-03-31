@@ -4,12 +4,14 @@
 #include <QFile>
 #include <QDebug>
 
+
 TcpSever::TcpSever(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TcpSever)
 {
     ui->setupUi(this);
     loadconfig();
+    opDB::getinstance().initdb();
     mytcpserver::getinstace().listen(QHostAddress(m_ip),m_port);
 }
 

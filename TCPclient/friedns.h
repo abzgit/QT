@@ -18,8 +18,10 @@ class friends : public QWidget
 public:
     explicit friends(QWidget *parent = nullptr);
     void showonlineuse(pdu *Pdu);
+    QString m_searchname;
 public slots:
     void showonline();
+    void searchuse();
 
 signals:
 private:
@@ -33,7 +35,9 @@ private:
     QPushButton *m_searchuser;
     QPushButton *m_sendmag;
     QPushButton *m_privatechat;
+
     online *m_online;
+
 };
 
 #endif // FRIEDNS_H

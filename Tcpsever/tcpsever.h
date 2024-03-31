@@ -2,6 +2,7 @@
 #define TCPSEVER_H
 
 #include <QWidget>
+#include "opdb.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

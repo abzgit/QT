@@ -48,6 +48,11 @@ QTcpSocket &Tcpclient::gettcpsocket()
     return m_sock;
 }
 
+QString Tcpclient::getlogname()
+{
+    return logname;
+}
+
 void Tcpclient::showconnect()
 {
     QMessageBox::information(this,"连接服务器","连接成功");
@@ -65,28 +70,66 @@ void Tcpclient::recvmag()
     case msg_type_regist_respond:
     {
         qDebug()<<"inter";
-        if(0 == strcmp(Pdu->caData,"regist ok!")){
+        if(0 == strcmp(Pdu->caData,REGIST_OK)){
             QMessageBox::information(this,"注册","注册成功!");
-        }else if(0 == strcmp(Pdu->caData,"regist failed!name exited!")){
+        }else if(0 == strcmp(Pdu->caData,REGIST_FAILED)){
             QMessageBox::warning(this,"注册","regist failed!name exited!");
         }
         break;
     }
     case msg_type_login_respond:
     {
-        if(0 == strcmp(Pdu->caData,"login ok!")){
+        if(0 == strcmp(Pdu->caData,LOGIN_OK)){
             QMessageBox::information(this,"登录","登录成功");
             openwidget::getinstance().show();
             this->hide();
-        }else if(0 == strcmp(Pdu->caData,"no account!")){
+        }else if(0 == strcmp(Pdu->caData,LOGIN_FAILED)){
             QMessageBox::warning(this,"登录","用户名或密码错误!或已经登录");
         }
         break;
     }
     case msg_type_online_respond:{
-        qDebug()<<msg_type_online_respond;
         openwidget::getinstance().getfriend()->showonlineuse(Pdu);
-        qDebug()<<Pdu->uiMsgType;
+        break;
+    }
+    case msg_type_search_respond:{
+        if(0 == strcmp(Pdu->caData,SEARCH_USER_EMPTY)){
+            QMessageBox::information(this,"搜索",QString("%1不存在！").arg(openwidget::getinstance().getfriend()->m_searchname));
+        }else if(0 == strcmp(Pdu->caData,SEARCH_USER_OK)){
+            QMessageBox::information(this,"搜索",QString("%1在线！").arg(openwidget::getinstance().getfriend()->m_searchname));
+        }else if(0 == strcmp(Pdu->caData,SEARCH_USER_OFFLINE)){
+            QMessageBox::information(this,"搜索",QString("%1不在线！").arg(openwidget::getinstance().getfriend()->m_searchname));
+        }
+    }
+    case msg_type_addfri_request:{
+        char caname[32] = {'\0'};   //发送方名字
+        strncpy(caname,Pdu->caData + 32,32);
+        int ret = QMessageBox::information(this,"添加好友",
+                QString("%1 want to add you as friend?").arg(caname),QMessageBox::Yes,QMessageBox::No);
+        pdu *respon = mkpud(0);
+        memcpy(respon->caData,Pdu->caData,32);
+        memcpy(respon->caData+32,Pdu->caData+32,32);
+        if(ret == QMessageBox::Yes){
+            respon->uiMsgType = msg_type_agree_add_friend;
+        }else{
+            respon->uiMsgType = msg_typr_disagree_add;
+        }
+        m_sock.write((char*)respon,respon->uiPDUlen);
+        free(respon);
+        respon = NULL;
+        break;
+    }
+    case msg_type_addfri_respond:{
+        QMessageBox::information(this,"添加好友",
+                  Pdu->caData);
+        break;
+    }
+    case msg_type_agree_add_friend:{
+        QMessageBox::information(this, "添加好友", QString("%1 已同意您的好友申请！").arg(Pdu -> caData));
+        break;
+    }
+    case msg_typr_disagree_add:{
+        QMessageBox::information(this, "添加好友", QString("%1 已拒绝您的好友申请！").arg(Pdu -> caData));
         break;
     }
     default:
@@ -116,6 +159,7 @@ void Tcpclient::on_login_clicked()
     QString name = ui->line_le->text();
     QString pwd = ui->pwd_le->text();
     if(!name.isEmpty() && !pwd.isEmpty()){
+        logname = name;
         pdu *Pdu = mkpud(0);
         Pdu->uiMsgType = msg_type_login_request;
         memcpy(Pdu->caData,name.toStdString().c_str(),32);

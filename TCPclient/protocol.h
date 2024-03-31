@@ -7,22 +7,45 @@
 typedef unsigned int uint;
 #endif // PROTOCOL_H
 
+#define REGIST_OK "regist ok"                            // 注册
+#define REGIST_FAILED "regist failed"
+
+#define LOGIN_OK "login ok"                              // 登录
+#define LOGIN_FAILED "login failed"
+
+// 好友操作
+#define SEARCH_USER_OK "search user ok"                  // 查找
+#define SEARCH_USER_OFFLINE "user offline"
+#define SEARCH_USER_EMPTY "no such people"
+
+#define UNKNOW_ERROR "unknow erroe"
+#define EXEITED_FRIEND "friend exit"
+#define ADD_FRIEND_OFFLINE "use offline"
+#define ADD_FRIEND_NO_EXIT "use not exist"
+
+
 enum msg_type{
     msg_type_min = 0,
-    msg_type_regist_request,
+    msg_type_regist_request,    //注册请求
     msg_type_regist_respond,
 
-    msg_type_login_request,
+    msg_type_login_request,     //登录请求
     msg_type_login_respond,
 
-    msg_type_cancle_request,
+    msg_type_cancle_request,    //注销请求
     msg_type_cancle_respond,
 
-    msg_type_online_request,
+    msg_type_online_request,    //查看在线好友请求
     msg_type_online_respond,
 
-    msg_type_search_request,
+    msg_type_search_request,    //查找好友请求
     msg_type_search_respond,
+
+    msg_type_addfri_request,    //添加好友请求
+    msg_type_addfri_respond,
+
+    msg_type_agree_add_friend,  //同意添加
+    msg_typr_disagree_add,
 
     msg_type_max = 0x00ffffff
 };

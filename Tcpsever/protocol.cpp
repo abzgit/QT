@@ -6,6 +6,6 @@ pdu *mkpud(uint uimsgLen)
     pdu *Pdu = (pdu*)malloc(uiPDULen);
     memset(Pdu,0,uiPDULen);
     Pdu->uiPDUlen = uiPDULen;
-    Pdu->uiMsgType = uimsgLen;
+    Pdu->uiMsgLen = uimsgLen;
     return Pdu;
 }

@@ -13,6 +13,7 @@ public:
     explicit mytcpserver(QObject *parent = nullptr);
     static mytcpserver &getinstace();
     void incomingConnection(qintptr socketDescriptor);
+    void transend(const char* pname,pdu *Pdu);   //广发
 private:
     QList<MyTcpSocket*> m_socklist;
 public slots:
