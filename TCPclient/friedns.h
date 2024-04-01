@@ -22,6 +22,7 @@ public:
 public slots:
     void showonline();
     void searchuse();
+    void flushfriend();
 
 signals:
 private:

@@ -44,6 +44,7 @@ friends ::friends(QWidget *parent)
     setLayout(pmain);
     connect(m_onlineuser,SIGNAL(clicked(bool)),this,SLOT(showonline()));
     connect(m_searchuser,SIGNAL(clicked(bool)),this,SLOT(searchuse()));
+    connect(m_flushfriend,SIGNAL(clicked(bool)),this,SLOT(flushfriend()));
 }
 
 void friends::showonlineuse(pdu *Pdu)
@@ -80,6 +81,17 @@ void friends::searchuse()
         free(Pdu);
         Pdu = NULL;
     }
+}
+
+void friends::flushfriend()
+{
+    QString strname = Tcpclient::getinstance().getlogname();
+    pdu *Pdu = mkpud(0);
+    Pdu->uiMsgType = msg_flush_request;
+    memcpy(Pdu->caData,strname.toStdString().c_str(),strname.size());
+    Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+    free(Pdu);
+    Pdu = NULL;
 }
 
 

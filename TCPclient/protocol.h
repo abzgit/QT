@@ -47,6 +47,9 @@ enum msg_type{
     msg_type_agree_add_friend,  //同意添加
     msg_typr_disagree_add,
 
+    msg_flush_request,  //刷新好友列表
+    msg_flush_respon,
+
     msg_type_max = 0x00ffffff
 };
 

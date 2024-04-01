@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>859</width>
-    <height>645</height>
+    <width>538</width>
+    <height>406</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Tcpclient</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>40</x>
      <y>10</y>
-     <width>441</width>
+     <width>461</width>
      <height>351</height>
     </rect>
    </property>
