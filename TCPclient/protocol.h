@@ -18,11 +18,12 @@ typedef unsigned int uint;
 #define SEARCH_USER_OFFLINE "user offline"
 #define SEARCH_USER_EMPTY "no such people"
 
-#define UNKNOW_ERROR "unknow erroe"
+#define UNKNOW_ERROR "unknow erroe"     //搜索
 #define EXEITED_FRIEND "friend exit"
 #define ADD_FRIEND_OFFLINE "use offline"
 #define ADD_FRIEND_NO_EXIT "use not exist"
 
+#define DEL_FRIEND_OK "delect friend ok!"
 
 enum msg_type{
     msg_type_min = 0,
@@ -49,6 +50,12 @@ enum msg_type{
 
     msg_flush_request,  //刷新好友列表
     msg_flush_respon,
+
+    msg_delfriend_request,  //删除好友
+    msg_delfriend_respon,
+
+    msg_privatechat_request,  //私聊
+    msg_privatechat_respon,
 
     msg_type_max = 0x00ffffff
 };

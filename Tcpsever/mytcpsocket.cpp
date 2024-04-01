@@ -122,6 +122,39 @@ void MyTcpSocket::handagreeadd(pdu *Pdu)
     mytcpserver::getinstace().transend(sourceName,Pdu);
 }
 
+void MyTcpSocket::handflush(pdu *Pdu)
+{
+    char cname[32] = {'\0'};
+    strncpy(cname,Pdu->caData,32);
+    QStringList ans = opDB::getinstance().handflush(cname);
+    uint uimsglen = ans.size()*32;
+    pdu *respon = mkpud(uimsglen);
+    for(int i = 0; i < ans.size(); ++i){
+        memcpy((char *)(respon->caMsg)+i*32,ans.at(i).toStdString().c_str(),ans.at(i).size());
+    }
+    respon->uiMsgType = msg_flush_respon;
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handdelfriend(pdu *Pdu)
+{
+    char mName[32] = {'\0'};
+    char fName[32] = {'\0'};
+    // 拷贝读取的信息
+    strncpy(mName, Pdu -> caData, 32);
+    strncpy(fName, Pdu -> caData + 32, 32);
+    opDB::getinstance().handdelfriend(mName,fName);
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_delfriend_respon;
+    strcpy(respon->caData,DEL_FRIEND_OK);
+    write((char*)respon,respon->uiPDUlen);
+    mytcpserver::getinstace().transend(fName,Pdu);
+    free(respon);
+    respon = NULL;
+}
+
 void MyTcpSocket::recvmsg()
 {
     uint uiPduLen = 0;
@@ -162,6 +195,14 @@ void MyTcpSocket::recvmsg()
         strncpy(sourceName, Pdu -> caData + 32, 32);
         // 服务器需要转发给发送好友请求方其被拒绝的消息
         mytcpserver::getinstace().transend(sourceName,Pdu);
+    }
+    case msg_flush_request:{
+        handflush(Pdu);
+        break;
+    }
+    case msg_delfriend_request:{
+        handdelfriend(Pdu);
+        break;
     }
     default:
         break;

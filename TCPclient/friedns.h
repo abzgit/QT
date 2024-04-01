@@ -18,11 +18,14 @@ class friends : public QWidget
 public:
     explicit friends(QWidget *parent = nullptr);
     void showonlineuse(pdu *Pdu);
+    void handflush(pdu *Pdu);
     QString m_searchname;
 public slots:
     void showonline();
     void searchuse();
     void flushfriend();
+    void delfriend();
+    void privatechat();
 
 signals:
 private:

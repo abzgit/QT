@@ -20,6 +20,10 @@ public:
     int handsearch(const char *name);       //数据库处理搜索
     int handadd(const char* fname,const char* mname);   //数据库处理添加好友
     bool handagreeadd(const char *addedName, const char *sourceName);   //数据库处理同意添加好友
+    QStringList handflush(const char *name);        //处理刷新好友
+    bool handdelfriend(const char* mname,const char* fname);    //删除好友
+    bool isonline(const char *name);
+
     int getIdByUserName(const char* name);  //数据库通过名字找id
 
     QStringList handonline();   //获取在线用户

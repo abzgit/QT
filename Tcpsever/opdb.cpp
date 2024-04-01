@@ -21,11 +21,7 @@ void opDB::initdb()     //初始化连接
     m_db.setHostName("localhost");
     m_db.setDatabaseName("D:\\Qt\\Tcpsever\\cloud.db");
     if(m_db.open()){
-        QSqlQuery que;
-        que.exec("select * from useinfo");
-        while(que.next()){
-            QString str = QString("%1,%2,%3").arg(que.value(0).toString()).arg(que.value(1).toString()).arg(que.value(2).toString());
-        }
+
     }else{
         QMessageBox::critical(NULL,"打开数据库","打开数据库失败");
     }
@@ -143,6 +139,72 @@ bool opDB::handagreeadd(const char *addedName, const char *sourceName)  //数据
 
     return query.exec(strQuery);
 
+}
+
+QStringList opDB::handflush(const char *name)
+{
+    QStringList strFriendList;
+    strFriendList.clear(); // 清除内容
+
+    if (NULL == name)
+    {
+        return strFriendList;
+    }
+    int id = getIdByUserName(name);
+    QString que = QString("select name,online from useinfo where id in (select "
+                          "friendid from friendinfo where id = %1)").arg(id);
+    QSqlQuery sqlop;
+    sqlop.exec(que);
+    QString online = "online";
+    QString offline = "offline";
+    while(sqlop.next()){
+        if(sqlop.value(1).toInt() == 0){
+            que = QString("%1---%2").arg(sqlop.value(0).toString()).arg(offline);
+        }else{
+            que = QString("%1---%2").arg(sqlop.value(0).toString()).arg(online);
+        }
+        strFriendList.append(que);
+    }
+    que = QString("select name,online from useinfo where id in (select "
+                  "id from friendinfo where friendid = %1)").arg(id);
+    sqlop.exec(que);
+    while(sqlop.next()){
+        if(sqlop.value(1).toInt() == 0){
+            que = QString("%1    %2").arg(sqlop.value(0).toString()).arg(offline);
+        }else{
+            que = QString("%1    %2").arg(sqlop.value(0).toString()).arg(online);
+        }
+        strFriendList.append(que);
+    }
+    return strFriendList; // 返回查询到所有在线用户的姓名
+}
+
+bool opDB::handdelfriend(const char *mname, const char *fname)
+{
+    if(mname == NULL || fname == NULL){
+        return false;
+    }
+    int mid,fid;
+    mid = getIdByUserName(mname);
+    fid = getIdByUserName(fname);
+    QString sqlque = QString("delete from friendinfo where (id = %1 and friendid = %2) or"
+                             " (id = %3 and friendid = %4)").arg(mid).arg(fid).arg(fid).arg(mid);
+    QSqlQuery quey;
+    quey.exec(sqlque);
+    return true;
+}
+
+bool opDB::isonline(const char *name)
+{
+    int mid = getIdByUserName(name);
+    QString sqlque = QString("select online from useinfo where id = %1").arg(mid);
+    QSqlQuery quey;
+    quey.exec(sqlque);
+    mid = quey.value(0).toInt();
+    if(mid == 0){
+        return false;
+    }
+    return true;
 }
 
 int opDB::getIdByUserName(const char *name) //通过名字找id

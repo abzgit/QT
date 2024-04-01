@@ -103,6 +103,7 @@ void Tcpclient::handaddrequest(pdu *Pdu)
     respon = NULL;
 }
 
+
 void Tcpclient::showconnect()
 {
     QMessageBox::information(this,"连接服务器","连接成功");
@@ -115,7 +116,6 @@ void Tcpclient::recvmag()
     uint uiMsgLen = uiPduLen - sizeof(pdu);
     pdu *Pdu = mkpud(uiMsgLen);
     m_sock.read((char*)Pdu + sizeof(uint),uiPduLen - sizeof(uint));
-    qDebug()<<Pdu->uiMsgType;
     switch (Pdu->uiMsgType) {
     case msg_type_regist_respond:
     {
@@ -151,6 +151,19 @@ void Tcpclient::recvmag()
     case msg_typr_disagree_add:{
         QMessageBox::information(this, "添加好友", QString("%1 已拒绝您的好友申请！").arg(Pdu -> caData));
         break;
+    }
+    case msg_flush_respon:{
+        openwidget::getinstance().getfriend()->handflush(Pdu);
+        break;
+    }
+    case msg_delfriend_request:{
+        char fname[32] = {'\0'};
+        memcpy(fname,Pdu->caData,32);
+        QMessageBox::information(this,"删除好友",QString("%1 已删除删除与你的好友关系").arg(fname));
+        break;
+    }
+    case msg_delfriend_respon:{
+        QMessageBox::information(this,"删除好友","删除好友成功");
     }
     default:
         break;

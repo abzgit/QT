@@ -2,6 +2,9 @@
 #include "online.h"
 #include "tcpclient.h"
 #include <QInputDialog>
+#include <QStringList>
+#include "privatechat.h"
+#include <QMessageBox>
 
 friends ::friends(QWidget *parent)
     : QWidget{parent}
@@ -45,6 +48,8 @@ friends ::friends(QWidget *parent)
     connect(m_onlineuser,SIGNAL(clicked(bool)),this,SLOT(showonline()));
     connect(m_searchuser,SIGNAL(clicked(bool)),this,SLOT(searchuse()));
     connect(m_flushfriend,SIGNAL(clicked(bool)),this,SLOT(flushfriend()));
+    connect(m_delfriend,SIGNAL(clicked(bool)),this,SLOT(delfriend()));
+    connect(m_privatechat,SIGNAL(clicked(bool)),this,SLOT(privatechat()));
 }
 
 void friends::showonlineuse(pdu *Pdu)
@@ -52,9 +57,23 @@ void friends::showonlineuse(pdu *Pdu)
     if(Pdu == NULL){
         return;
     }
-    qDebug()<<"had showuse";
     m_online->showuse(Pdu);
 }
+
+void friends::handflush(pdu *Pdu)
+{
+    if(Pdu == NULL){
+        return;
+    }
+    uint datasize = Pdu->uiMsgLen/32;
+    char name[32] = {'\0'};
+    m_friendlist->clear();
+    for(uint i = 0; i < datasize; ++i){
+        memcpy(name,(char *)(Pdu->caMsg)+i*32,32);
+        m_friendlist->addItem(name);
+    }
+}
+
 void friends::showonline()
 {
     if(m_online->isHidden()){
@@ -73,7 +92,6 @@ void friends::searchuse()
 {
     m_searchname = QInputDialog::getText(this,"搜索","用户名");
     if(!m_searchname.isEmpty()){
-        qDebug()<<m_searchname;
         pdu *Pdu = mkpud(0);
         memcpy(Pdu->caData,m_searchname.toStdString().c_str(),m_searchname.size());
         Pdu->uiMsgType = msg_type_search_request;
@@ -92,6 +110,38 @@ void friends::flushfriend()
     Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
     free(Pdu);
     Pdu = NULL;
+}
+
+void friends::delfriend()
+{
+    if(m_friendlist->currentItem() != NULL){
+        QString friname = m_friendlist->currentItem()->text();
+        QStringList strname = friname.split(" ");
+        QString fname = strname[0];
+        pdu *Pdu = mkpud(0);
+        Pdu->uiMsgType = msg_delfriend_request;
+        QString mname = Tcpclient::getinstance().getlogname();
+        memcpy(Pdu->caData,mname.toStdString().c_str(),mname.size());
+        memcpy(Pdu->caData+32,fname.toStdString().c_str(),fname.size());
+        Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+        free(Pdu);
+        Pdu = NULL;
+    }
+}
+
+void friends::privatechat()
+{
+    if(NULL != m_friendlist->currentItem()){
+        QString chatname = m_friendlist->currentItem()->text();
+        QStringList list = chatname.split(" ");
+        chatname = list[0];
+        privatechat::getinsance().setchatname(chatname);
+        if(privatechat::getinsance().isHidden()){
+            privatechat::getinsance().show();
+        }
+    }else{
+        QMessageBox::warning(this,"私聊","请选择私聊的对象");
+    }
 }
 
 
