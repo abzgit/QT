@@ -16,7 +16,7 @@ opDB &opDB::getinstance()
     return instance;
 }
 
-void opDB::initdb()
+void opDB::initdb()     //初始化连接
 {
     m_db.setHostName("localhost");
     m_db.setDatabaseName("D:\\Qt\\Tcpsever\\cloud.db");
@@ -36,7 +36,7 @@ opDB::~opDB()
     m_db.close();
 }
 
-bool opDB::handregist(const char *name, const char *pwd)
+bool opDB::handregist(const char *name, const char *pwd)    //处理注册
 {
     if(name == NULL || pwd == NULL){
         return false;
@@ -46,7 +46,7 @@ bool opDB::handregist(const char *name, const char *pwd)
     return query.exec(sqlque);
 }
 
-bool opDB::handlogin(const char *name, const char *pwd)
+bool opDB::handlogin(const char *name, const char *pwd)     //处理登录
 {
     if(name == NULL || pwd == NULL){
         return false;
@@ -64,7 +64,7 @@ bool opDB::handlogin(const char *name, const char *pwd)
     }
 }
 
-void opDB::handoffline(const char *name)
+void opDB::handoffline(const char *name)    //数据库处理登录
 {
     if(name == NULL){
         qDebug()<<"name is NULL!";
@@ -75,7 +75,7 @@ void opDB::handoffline(const char *name)
     quey.exec(sqlque);
 }
 
-int opDB::handsearch(const char *name)
+int opDB::handsearch(const char *name)      //数据库处理搜索
 {
     if(name == NULL){
         return -1;
@@ -95,7 +95,7 @@ int opDB::handsearch(const char *name)
     }
 }
 
-int opDB::handadd(const char *fname, const char *mname)
+int opDB::handadd(const char *fname, const char *mname) //数据库处理添加好友
 {
     if(fname == NULL || mname == NULL){
         return -1;
@@ -123,7 +123,7 @@ int opDB::handadd(const char *fname, const char *mname)
     }
 }
 
-bool opDB::handagreeadd(const char *addedName, const char *sourceName)
+bool opDB::handagreeadd(const char *addedName, const char *sourceName)  //数据库处理同意好友
 {
     if(NULL == addedName || NULL == sourceName)
     {
@@ -145,7 +145,7 @@ bool opDB::handagreeadd(const char *addedName, const char *sourceName)
 
 }
 
-int opDB::getIdByUserName(const char *name)
+int opDB::getIdByUserName(const char *name) //通过名字找id
 {
     if(NULL == name)
     {
@@ -165,7 +165,7 @@ int opDB::getIdByUserName(const char *name)
     }
 }
 
-QStringList opDB::handonline()
+QStringList opDB::handonline()  //查询在线用户
 {
     QStringList ret;
     QString sqlque = QString("select name from useinfo where online = 1");

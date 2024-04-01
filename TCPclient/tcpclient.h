@@ -22,6 +22,10 @@ public:
     static Tcpclient& getinstance();
     QTcpSocket& gettcpsocket();
     QString getlogname();
+    void handregist(pdu *Pdu);
+    void handlogin(pdu *Pdu);
+    void handsearch(pdu *Pdu);
+    void handaddrequest(pdu *Pdu);
 
 private:
     Ui::Tcpclient *ui;

@@ -12,6 +12,12 @@ signals:
 public:
     explicit MyTcpSocket(QObject *parent = nullptr);
     QString getname();
+    void handregist(pdu *Pdu);
+    void handlogin(pdu *Pdu);
+    void handoline();
+    void handsearch(pdu *Pdu);
+    void handaddfriend(pdu *Pdu);
+    void handagreeadd(pdu *Pdu);
 public slots:
     void recvmsg();
     void clientoffline();
