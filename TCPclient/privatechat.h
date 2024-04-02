@@ -1,9 +1,10 @@
+#pragma once
 #ifndef PRIVATECHAT_H
 #define PRIVATECHAT_H
 
 #include <QWidget>
 #include "protocol.h"
-#include "tcpclient.h"
+#include<tcpclient.h>
 
 namespace Ui {
 class privatechat;
@@ -18,6 +19,7 @@ public:
     ~privatechat();
     void setchatname(QString strname);
     static privatechat &getinsance();
+    void handprivatechat(pdu *Pdu);
 private slots:
     void on_sendmsg_clicked();
 

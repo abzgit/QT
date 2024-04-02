@@ -57,6 +57,9 @@ enum msg_type{
     msg_privatechat_request,  //私聊
     msg_privatechat_respon,
 
+    msg_group_chat_request,  //群聊
+    msg_group_chat_respon,
+
     msg_type_max = 0x00ffffff
 };
 

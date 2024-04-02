@@ -26,9 +26,26 @@ privatechat &privatechat::getinsance()
     return instance;
 }
 
+void privatechat::handprivatechat(pdu *Pdu)
+{
+    if(NULL == Pdu){
+        return;
+    }
+    char sendname[32] = {'\0'};
+    memcpy(sendname,Pdu->caData,32);
+    if(privatechat::getinsance().isHidden()){
+        QString strsendname = sendname;
+        privatechat::getinsance().setchatname(sendname);
+        privatechat::getinsance().show();
+    }
+    QString strmsg = QString("%1 says: %2").arg(sendname).arg((char*)(Pdu->caMsg));
+    ui->showmsg->append(strmsg);
+}
+
 void privatechat::on_sendmsg_clicked()
 {
     QString msg = ui->inputmsg->text();
+    ui->inputmsg->clear();
     if(!msg.isEmpty()){
         pdu *Pdu = mkpud(msg.size()+1);
         Pdu->uiMsgType = msg_privatechat_request;

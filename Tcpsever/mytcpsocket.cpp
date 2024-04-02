@@ -155,6 +155,30 @@ void MyTcpSocket::handdelfriend(pdu *Pdu)
     respon = NULL;
 }
 
+void MyTcpSocket::handprivatechat(pdu *Pdu)
+{
+    char fname[32] = {'\0'};
+    memcpy(fname,Pdu->caData+32,32);
+    QString str = QString::fromLocal8Bit(fname);
+    QStringList list = str.split(" ");
+    QString newfname = list[0];
+    strcpy(fname,newfname.toStdString().c_str());
+    mytcpserver::getinstace().transend(fname,Pdu);
+    qDebug()<<fname;
+}
+
+void MyTcpSocket::handgroupchat(pdu *Pdu)
+{
+    char caname[32] = {'\0'};
+    strncpy(caname,Pdu->caData,32);
+    QStringList online = opDB::getinstance().handflush(caname);
+    QString tmp;
+    for(int i = 0; i < online.size(); ++i){
+        tmp = online[i].split(" ").at(0);
+        mytcpserver::getinstace().transend(tmp.toStdString().c_str(),Pdu);
+    }
+}
+
 void MyTcpSocket::recvmsg()
 {
     uint uiPduLen = 0;
@@ -202,6 +226,14 @@ void MyTcpSocket::recvmsg()
     }
     case msg_delfriend_request:{
         handdelfriend(Pdu);
+        break;
+    }
+    case msg_privatechat_request:{
+        handprivatechat(Pdu);
+        break;
+    }
+    case msg_group_chat_request:{
+        handgroupchat(Pdu);
         break;
     }
     default:

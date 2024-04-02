@@ -19,6 +19,7 @@ public:
     explicit friends(QWidget *parent = nullptr);
     void showonlineuse(pdu *Pdu);
     void handflush(pdu *Pdu);
+    void handgroupchat(pdu *Pdu);
     QString m_searchname;
 public slots:
     void showonline();
@@ -26,6 +27,7 @@ public slots:
     void flushfriend();
     void delfriend();
     void privatechat();
+    void groupchat();
 
 signals:
 private:

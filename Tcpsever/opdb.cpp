@@ -159,9 +159,9 @@ QStringList opDB::handflush(const char *name)
     QString offline = "offline";
     while(sqlop.next()){
         if(sqlop.value(1).toInt() == 0){
-            que = QString("%1---%2").arg(sqlop.value(0).toString()).arg(offline);
+            que = QString("%1   %2").arg(sqlop.value(0).toString()).arg(offline);
         }else{
-            que = QString("%1---%2").arg(sqlop.value(0).toString()).arg(online);
+            que = QString("%1   %2").arg(sqlop.value(0).toString()).arg(online);
         }
         strFriendList.append(que);
     }

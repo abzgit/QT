@@ -20,6 +20,8 @@ public:
     void handagreeadd(pdu *Pdu);
     void handflush(pdu *Pdu);
     void handdelfriend(pdu *Pdu);
+    void handprivatechat(pdu *Pdu);
+    void handgroupchat(pdu *Pdu);
 public slots:
     void recvmsg();
     void clientoffline();

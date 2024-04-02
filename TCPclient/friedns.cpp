@@ -50,6 +50,7 @@ friends ::friends(QWidget *parent)
     connect(m_flushfriend,SIGNAL(clicked(bool)),this,SLOT(flushfriend()));
     connect(m_delfriend,SIGNAL(clicked(bool)),this,SLOT(delfriend()));
     connect(m_privatechat,SIGNAL(clicked(bool)),this,SLOT(privatechat()));
+    connect(m_sendmag,SIGNAL(clicked(bool)),this,SLOT(groupchat()));
 }
 
 void friends::showonlineuse(pdu *Pdu)
@@ -72,6 +73,14 @@ void friends::handflush(pdu *Pdu)
         memcpy(name,(char *)(Pdu->caMsg)+i*32,32);
         m_friendlist->addItem(name);
     }
+}
+
+void friends::handgroupchat(pdu *Pdu)
+{
+
+    QString strmsg = QString("%1 says: %2").arg(Pdu->caData).arg((char*)(Pdu->caMsg));
+
+    m_msgte->append(strmsg);
 }
 
 void friends::showonline()
@@ -141,6 +150,21 @@ void friends::privatechat()
         }
     }else{
         QMessageBox::warning(this,"私聊","请选择私聊的对象");
+    }
+}
+
+void friends::groupchat()
+{
+    QString msg = m_inputmag->text();
+    if(!msg.isEmpty()){
+        pdu *Pdu = mkpud(msg.size()+1);
+        Pdu->uiMsgType = msg_group_chat_request;
+        QString strname = Tcpclient::getinstance().getlogname();
+        strncpy(Pdu->caData,strname.toStdString().c_str(),strname.size());
+        strncpy((char*)(Pdu->caMsg),msg.toStdString().c_str(),msg.size());
+        Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+    }else{
+        QMessageBox::warning(this,"群聊","发送消息不能为空");
     }
 }
 

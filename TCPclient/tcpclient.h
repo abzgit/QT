@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include "protocol.h"
+#include "privatechat.h"
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Tcpclient;

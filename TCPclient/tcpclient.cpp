@@ -165,6 +165,14 @@ void Tcpclient::recvmag()
     case msg_delfriend_respon:{
         QMessageBox::information(this,"删除好友","删除好友成功");
     }
+    case msg_privatechat_request:{
+        privatechat::getinsance().handprivatechat(Pdu);
+        break;
+    }
+    case msg_group_chat_request:{
+        openwidget::getinstance().getfriend()->handgroupchat(Pdu);
+        break;
+    }
     default:
         break;
     }
