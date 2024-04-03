@@ -53,6 +53,11 @@ QString Tcpclient::getlogname()
     return logname;
 }
 
+QString Tcpclient::getcurpath()
+{
+    return m_curpath;
+}
+
 void Tcpclient::handregist(pdu *Pdu)
 {
     if(0 == strcmp(Pdu->caData,REGIST_OK)){
@@ -66,6 +71,7 @@ void Tcpclient::handlogin(pdu *Pdu)
 {
     if(0 == strcmp(Pdu->caData,LOGIN_OK)){
         QMessageBox::information(this,"登录","登录成功");
+        m_curpath = QString("./%1").arg(logname);
         openwidget::getinstance().show();
         this->hide();
     }else if(0 == strcmp(Pdu->caData,LOGIN_FAILED)){
@@ -164,6 +170,7 @@ void Tcpclient::recvmag()
     }
     case msg_delfriend_respon:{
         QMessageBox::information(this,"删除好友","删除好友成功");
+        break;
     }
     case msg_privatechat_request:{
         privatechat::getinsance().handprivatechat(Pdu);
@@ -171,6 +178,14 @@ void Tcpclient::recvmag()
     }
     case msg_group_chat_request:{
         openwidget::getinstance().getfriend()->handgroupchat(Pdu);
+        break;
+    }
+    case msg_creat_dir_respon:{
+        QMessageBox::information(this,"创建文件",Pdu->caData);
+        break;
+    }
+    case msg_flushfile_respon:{
+        openwidget::getinstance().getbook()->handflushfile(Pdu);
         break;
     }
     default:

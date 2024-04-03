@@ -3,6 +3,8 @@
 
 #include <QTcpSocket>
 #include "protocol.h"
+#include <QDir>
+#include<QMessageBox>
 
 class MyTcpSocket : public QTcpSocket
 {
@@ -22,6 +24,8 @@ public:
     void handdelfriend(pdu *Pdu);
     void handprivatechat(pdu *Pdu);
     void handgroupchat(pdu *Pdu);
+    void handcreatdir(pdu *Pdu);
+    void handflushfile(pdu *Pdu);
 public slots:
     void recvmsg();
     void clientoffline();

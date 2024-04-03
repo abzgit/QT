@@ -14,7 +14,6 @@ mytcpserver &mytcpserver::getinstace()
 
 void mytcpserver::incomingConnection(qintptr socketDescriptor)
 {
-    qDebug()<<"clientcomming";
     MyTcpSocket *tcpsock = new MyTcpSocket;
     tcpsock->setSocketDescriptor(socketDescriptor);
     m_socklist.append(tcpsock);

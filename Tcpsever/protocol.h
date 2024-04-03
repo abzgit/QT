@@ -20,9 +20,20 @@ typedef unsigned int uint;
 #define ADD_FRIEND_OFFLINE "use offline"
 #define ADD_FRIEND_NO_EXIT "use not exist"
 
-#define DEL_FRIEND_OK "delect friend ok!"
+#define DEL_FRIEND_OK "delect friend ok!"   //删除好友
+
+#define DIR_NO_EXIT "cur dir not exit!"     //创建文件夹
+#define FILE_NAME_EXITED "file name exited!"
+#define CREATE_DIR_OK "create dir ok!"
 
 #endif // PROTOCOL_H
+
+struct fileinfo
+{
+    char filename[32];  //文件名字
+    int filetype;       //文件类型
+};
+
 struct pdu{
     uint uiPDUlen;      //总的协议数据单元大小
     uint uiMsgType;     //消息类型
@@ -64,6 +75,12 @@ enum msg_type{
 
     msg_group_chat_request,  //群聊
     msg_group_chat_respon,
+
+    msg_creat_dir_request,  //创建文件夹
+    msg_creat_dir_respon,
+
+    msg_flushfile_request,  //刷新文件
+    msg_flushfile_respon,
 
     msg_type_max = 0x00ffffff
 };

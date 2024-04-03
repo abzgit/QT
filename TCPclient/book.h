@@ -7,13 +7,14 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <protocol.h>
 
 class book : public QWidget
 {
     Q_OBJECT
 public:
     explicit book(QWidget *parent = nullptr);
-
+    void handflushfile(pdu *Pdu);
 signals:
 
 private:
@@ -27,6 +28,10 @@ private:
     QPushButton *m_delfile;
     QPushButton *m_downloadfile;
     QPushButton *m_sharefile;
+
+public slots:
+    void creatdir();
+    void flushfile();
 };
 
 #endif // BOOK_H

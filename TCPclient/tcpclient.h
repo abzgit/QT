@@ -23,6 +23,7 @@ public:
     static Tcpclient& getinstance();
     QTcpSocket& gettcpsocket();
     QString getlogname();
+    QString getcurpath();
     void handregist(pdu *Pdu);
     void handlogin(pdu *Pdu);
     void handsearch(pdu *Pdu);
@@ -34,6 +35,7 @@ private:
     qint16 m_port;
     QTcpSocket m_sock;
     QString logname;
+    QString m_curpath;
 
 public slots:
     void showconnect();

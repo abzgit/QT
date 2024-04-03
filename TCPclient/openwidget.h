@@ -15,6 +15,7 @@ public:
     explicit openwidget(QWidget *parent = nullptr);
     static openwidget &getinstance();
     friends *getfriend();
+    book *getbook();
 
 signals:
 

@@ -33,3 +33,8 @@ friends *openwidget::getfriend()
 {
     return m_friend;
 }
+
+book *openwidget::getbook()
+{
+    return m_book;
+}

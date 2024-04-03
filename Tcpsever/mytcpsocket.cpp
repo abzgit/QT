@@ -3,6 +3,8 @@
 #include "opdb.h"
 #include <QMessageBox>
 #include "mytcpserver.h"
+#include <QDir>
+#include <QFileInfoList>
 
 MyTcpSocket::MyTcpSocket(QObject *parent)
     : QTcpSocket{parent}
@@ -27,6 +29,7 @@ void MyTcpSocket::handregist(pdu *Pdu)
     respon->uiMsgType = msg_type_regist_respond;
     if(ret){
         strcpy(respon->caData,REGIST_OK);
+        QDir dir;
     }else{
         strcpy(respon->caData,REGIST_FAILED);
     }
@@ -47,6 +50,8 @@ void MyTcpSocket::handlogin(pdu *Pdu)
     if(ret){
         strcpy(respon->caData,LOGIN_OK);
         m_name = name;
+        QDir dir;
+        dir.mkdir(QString("./%1").arg(name));
     }else{
         strcpy(respon->caData,LOGIN_FAILED);
     }
@@ -179,6 +184,58 @@ void MyTcpSocket::handgroupchat(pdu *Pdu)
     }
 }
 
+void MyTcpSocket::handcreatdir(pdu *Pdu)
+{
+    QDir dir;
+    QString curpath = QString("%1").arg((char*)Pdu->caMsg);
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_creat_dir_respon;
+    bool ret = dir.exists(curpath);     //文件夹是否存在
+    if(ret){
+        char creatpath[32];
+        memcpy(creatpath,Pdu->caData+32,32);
+        QString newpath = curpath + "/" + creatpath;
+        ret = dir.exists(newpath);
+        if(ret){    //新路径是否存在
+            strcpy(respon->caData,FILE_NAME_EXITED);
+        }else{
+            dir.mkdir(newpath);
+            strcpy(respon->caData,CREATE_DIR_OK);
+        }
+    }else{
+        strcpy(respon->caData,DIR_NO_EXIT);
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handflushfile(pdu *Pdu)
+{
+    char *curpath = new char[Pdu->uiMsgLen];
+    memcpy(curpath,Pdu->caMsg,Pdu->uiMsgLen);
+    QDir dir(curpath);
+    QFileInfoList filelist = dir.entryInfoList();
+    int filecount = filelist.size();
+    pdu *respon = mkpud(sizeof(fileinfo)*(filecount-2));
+    respon->uiMsgType = msg_flushfile_respon;
+    fileinfo *tmpinfo = NULL;
+    QString tmpfilename;
+    for(int i = 2; i < filecount; ++i){
+        tmpinfo = (fileinfo*)(respon->caMsg)+i-2;
+        tmpfilename = filelist[i].fileName();
+        memcpy(tmpinfo->filename,tmpfilename.toStdString().c_str(),tmpfilename.size());
+        if(filelist[i].isDir()){
+            tmpinfo->filetype = 0;
+        }else if(filelist[i].isFile()){
+            tmpinfo->filetype = 1;
+        }
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
 void MyTcpSocket::recvmsg()
 {
     uint uiPduLen = 0;
@@ -219,6 +276,7 @@ void MyTcpSocket::recvmsg()
         strncpy(sourceName, Pdu -> caData + 32, 32);
         // 服务器需要转发给发送好友请求方其被拒绝的消息
         mytcpserver::getinstace().transend(sourceName,Pdu);
+        break;
     }
     case msg_flush_request:{
         handflush(Pdu);
@@ -234,6 +292,14 @@ void MyTcpSocket::recvmsg()
     }
     case msg_group_chat_request:{
         handgroupchat(Pdu);
+        break;
+    }
+    case msg_creat_dir_request:{
+        handcreatdir(Pdu);
+        break;
+    }
+    case msg_flushfile_request:{
+        handflushfile(Pdu);
         break;
     }
     default:
