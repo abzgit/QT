@@ -28,6 +28,7 @@ public:
     void handlogin(pdu *Pdu);
     void handsearch(pdu *Pdu);
     void handaddrequest(pdu *Pdu);
+    void setcurpath(QString curpath);
 
 private:
     Ui::Tcpclient *ui;

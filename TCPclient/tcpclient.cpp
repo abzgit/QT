@@ -109,6 +109,11 @@ void Tcpclient::handaddrequest(pdu *Pdu)
     respon = NULL;
 }
 
+void Tcpclient::setcurpath(QString curpath)
+{
+    m_curpath = curpath;
+}
+
 
 void Tcpclient::showconnect()
 {
@@ -181,11 +186,28 @@ void Tcpclient::recvmag()
         break;
     }
     case msg_creat_dir_respon:{
-        QMessageBox::information(this,"创建文件",Pdu->caData);
+        QMessageBox::information(this,"创建文件",(char*)(Pdu->caData));
         break;
     }
     case msg_flushfile_respon:{
         openwidget::getinstance().getbook()->handflushfile(Pdu);
+        QString enter = openwidget::getinstance().getbook()->getenterdir();
+        if(!enter.isEmpty()){
+            m_curpath = m_curpath+"/"+enter;
+        }
+        break;
+    }
+    case msg_deldir_respon:{
+        QMessageBox::information(this,"删除文件夹",(char*)(Pdu->caData));
+        break;
+    }
+    case msg_rename_dir_respon:{
+        QMessageBox::information(this,"重命名文件",(char*)(Pdu->caData));
+        break;
+    }
+    case msg_enter_dir_respon:{
+        openwidget::getinstance().getbook()->clearmenterdir();
+        QMessageBox::information(this,"进入文件夹",(char*)(Pdu->caData));
         break;
     }
     default:

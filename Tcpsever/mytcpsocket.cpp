@@ -236,6 +236,99 @@ void MyTcpSocket::handflushfile(pdu *Pdu)
     respon = NULL;
 }
 
+void MyTcpSocket::handdeldir(pdu *Pdu)
+{
+    char dirname[32] = {'\0'};
+    strcpy(dirname,Pdu->caData);
+    char *path = new char[Pdu->uiMsgLen];
+    memcpy(path,Pdu->caMsg,Pdu->uiMsgLen);
+    QString nowpath = QString("%1/%2").arg(path).arg(dirname);
+    QFileInfo fileinfo(nowpath);
+    bool ret = false;
+    if(fileinfo.isDir()){
+        QDir dir;
+        dir.setPath(nowpath);
+        ret = dir.removeRecursively();
+    }else if(fileinfo.isFile()){
+        ret = false;
+    }
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_deldir_respon;
+    if(ret){
+        memcpy(respon->caData,DEL_DIR_OK,strlen(DEL_DIR_OK));
+    }else{
+        memcpy(respon->caData,DEL_DIR_FAILURED,strlen(DEL_DIR_FAILURED));
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handrename(pdu *Pdu)
+{
+    char oldname[32] = {'\0'};
+    char newname[32] = {'\0'};
+    strncpy(oldname,Pdu->caData,32);
+    strncpy(newname,Pdu->caData+32,32);
+    char *curpath = new char[Pdu->uiMsgLen];
+    memcpy(curpath,Pdu->caMsg,Pdu->uiMsgLen);
+    QString oldpath = QString("%1/%2").arg(curpath).arg(oldname);
+    QString newpath = QString("%1/%2").arg(curpath).arg(newname);
+    QDir dir;
+    bool ret = dir.rename(oldpath,newpath);
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_rename_dir_respon;
+    if(ret){
+        strcpy(respon->caData,RENAME_FILE_OK);
+    }else{
+        strcpy(respon->caData,RENAME_FILE_FAILURED);
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handenterdir(pdu *Pdu)
+{
+    char enterdir[32] = {'\0'};
+    strncpy(enterdir,Pdu->caData,32);
+    char *curpath = new char[Pdu->uiMsgLen];
+    memcpy(curpath,Pdu->caMsg,Pdu->uiMsgLen);
+    QString newpath = QString("%1/%2").arg(curpath).arg(enterdir);
+    QFileInfo Fileinfo(newpath);
+    pdu *respon = NULL;
+    if(Fileinfo.isDir()){
+        QDir dir(newpath);
+        QFileInfoList filelist = dir.entryInfoList();
+        int filecount = filelist.size();
+        respon = mkpud(sizeof(fileinfo)*(filecount-2));
+        respon->uiMsgType = msg_flushfile_respon;
+        fileinfo *tmpinfo = NULL;
+        QString tmpfilename;
+        for(int i = 2; i < filecount; ++i){
+            tmpinfo = (fileinfo*)(respon->caMsg)+i-2;
+            tmpfilename = filelist[i].fileName();
+            memcpy(tmpinfo->filename,tmpfilename.toStdString().c_str(),tmpfilename.size());
+            qDebug()<<tmpfilename;
+            if(filelist[i].isDir()){
+                tmpinfo->filetype = 0;
+            }else if(filelist[i].isFile()){
+                tmpinfo->filetype = 1;
+            }
+        }
+        write((char*)respon,respon->uiPDUlen);
+        free(respon);
+        respon = NULL;
+    }else{
+        respon = mkpud(0);
+        respon->uiMsgType = msg_enter_dir_respon;
+        strcpy(respon->caData,ENTER_DIR_FAILURED);
+        write((char*)respon,respon->uiPDUlen);
+        free(respon);
+        respon = NULL;
+    }
+}
+
 void MyTcpSocket::recvmsg()
 {
     uint uiPduLen = 0;
@@ -302,10 +395,21 @@ void MyTcpSocket::recvmsg()
         handflushfile(Pdu);
         break;
     }
+    case msg_deldir_request:{
+        handdeldir(Pdu);
+        break;
+    }
+    case msg_rename_dir_request:{
+        handrename(Pdu);
+        break;
+    }
+    case msg_enter_dir_request:{
+        handenterdir(Pdu);
+        break;
+    }
     default:
         break;
     }
-    // qDebug()<<name<<pwd;
 }
 
 void MyTcpSocket::clientoffline()

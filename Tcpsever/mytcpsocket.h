@@ -26,6 +26,9 @@ public:
     void handgroupchat(pdu *Pdu);
     void handcreatdir(pdu *Pdu);
     void handflushfile(pdu *Pdu);
+    void handdeldir(pdu *Pdu);
+    void handrename(pdu *Pdu);
+    void handenterdir(pdu *Pdu);
 public slots:
     void recvmsg();
     void clientoffline();

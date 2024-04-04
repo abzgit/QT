@@ -2,10 +2,12 @@
 #include "tcpclient.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QFileDialog>
 
 book::book(QWidget *parent)
     : QWidget{parent}
 {
+    m_enterdir.clear();
     m_booklist = new QListWidget;
     m_return = new QPushButton("返回");
     m_createdir = new QPushButton("创建文件夹");
@@ -39,6 +41,11 @@ book::book(QWidget *parent)
 
     connect(m_createdir,SIGNAL(clicked(bool)),this,SLOT(creatdir()));
     connect(m_flushdir,SIGNAL(clicked(bool)),this,SLOT(flushfile()));
+    connect(m_deldir,SIGNAL(clicked(bool)),this,SLOT(delfit()));
+    connect(m_renamedir,SIGNAL(clicked(bool)),this,SLOT(renamedir()));
+    connect(m_booklist,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(enterdir(QModelIndex)));
+    connect(m_return,SIGNAL(clicked(bool)),this,SLOT(returnpredir()));
+    connect(m_uploadfile,SIGNAL(clicked(bool)),this,SLOT(uploadfile()));
 }
 
 void book::handflushfile(pdu *Pdu)  //处理请求
@@ -61,6 +68,17 @@ void book::handflushfile(pdu *Pdu)  //处理请求
         m_booklist->addItem(tmp);
     }
 }
+
+void book::clearmenterdir()
+{
+    m_enterdir.clear();
+}
+
+QString book::getenterdir()
+{
+    return m_enterdir;
+}
+
 
 void book::creatdir()
 {
@@ -98,4 +116,97 @@ void book::flushfile()  //发送请求
     Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
     free(Pdu);
     Pdu = NULL;
+}
+
+void book::delfit()
+{
+    QString curpath = Tcpclient::getinstance().getcurpath();
+    QListWidgetItem *chose = m_booklist->currentItem();
+    if(NULL == chose){
+        QMessageBox::warning(this,"删除文件夹","请选择要删除的文件夹");
+    }else{
+        QString dirname = chose->text();
+        pdu *Pdu = mkpud(curpath.size()+1);
+        Pdu->uiMsgType = msg_deldir_request;
+        strncpy(Pdu->caData,dirname.toStdString().c_str(),dirname.size());
+        memcpy(Pdu->caMsg,curpath.toStdString().c_str(),curpath.size());
+        Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+        free(Pdu);
+        Pdu = NULL;
+    }
+}
+
+void book::renamedir()
+{
+    QString curpath = Tcpclient::getinstance().getcurpath();
+    pdu *Pdu = NULL;
+    QListWidgetItem *chose = m_booklist->currentItem();
+    if(chose == NULL){
+        QMessageBox::warning(this,"重命名文件","请选择要删除的文件");
+    }else{
+        QString oldname = chose->text();
+        QString newname = QInputDialog::getText(this,"重命名文件","请输入新的文件名");
+        if(!newname.isEmpty()){
+            Pdu = mkpud(curpath.size()+1);
+            Pdu->uiMsgType = msg_rename_dir_request;
+            strncpy(Pdu->caData,oldname.toStdString().c_str(),oldname.size());
+            strncpy(Pdu->caData+32,newname.toStdString().c_str(),newname.size());
+            memcpy(Pdu->caMsg,curpath.toStdString().c_str(),curpath.size());
+            Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+            free(Pdu);
+            Pdu = NULL;
+        }else{
+            QMessageBox::warning(this,"重命名文件","文件名不能为空");
+        }
+    }
+}
+
+void book::enterdir(const QModelIndex &index)
+{
+    QString dirname = index.data().toString();
+    m_enterdir = dirname;
+    QString curpath = Tcpclient::getinstance().getcurpath();
+    pdu *Pdu = mkpud(curpath.size()+1);
+    Pdu->uiMsgType = msg_enter_dir_request;
+    strncpy(Pdu->caData,dirname.toStdString().c_str(),dirname.size());
+    memcpy(Pdu->caMsg,curpath.toStdString().c_str(),curpath.size());
+    Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+    free(Pdu);
+    Pdu = NULL;
+}
+
+void book::returnpredir()
+{
+    QString curpath = Tcpclient::getinstance().getcurpath();
+    QString rootpath = "./"+Tcpclient::getinstance().getlogname();
+    if(curpath == rootpath){
+        QMessageBox::warning(this,"返回上层目录","根目录，不可返回！");
+    }else{
+        int pos = curpath.lastIndexOf('/');
+        curpath.remove(pos,curpath.size()-pos);
+        Tcpclient::getinstance().setcurpath(curpath);
+        clearmenterdir();
+        flushfile();
+    }
+}
+
+void book::uploadfile()
+{
+    QString curpath = Tcpclient::getinstance().getcurpath();
+    QString uploadfile = QFileDialog::getOpenFileName();
+    if(!uploadfile.isEmpty()){
+        int pos = uploadfile.lastIndexOf('/');
+        QString filename = uploadfile.right(uploadfile.size()-pos-1);
+        QFile file(uploadfile);
+        qint64 filesize = file.size();
+        pdu *Pdu = mkpud(curpath.size()+1);
+        Pdu->uiMsgType = msg_upload_request;
+        memcpy(Pdu->caMsg,curpath.toStdString().c_str(),curpath.size());
+        sprintf(Pdu->caData,"%s %lld",filename.toStdString().c_str(),filesize);
+        Tcpclient::getinstance().gettcpsocket().write((char*)Pdu,Pdu->uiPDUlen);
+        free(Pdu);
+        Pdu = NULL;
+    }else{
+        QMessageBox::warning(this,"上传文件","上传的文件不能为空！");
+    }
 }

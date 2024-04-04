@@ -29,6 +29,15 @@ typedef unsigned int uint;
 #define FILE_NAME_EXITED "file name exited!"
 #define CREATE_DIR_OK "create dir ok!"
 
+#define DEL_DIR_OK "delete dir ok!"
+#define DEL_DIR_FAILURED "delete dir failured!"
+
+#define RENAME_FILE_OK "rename file ok!"
+#define RENAME_FILE_FAILURED "rename file failured"
+
+#define ENTER_DIR_OK "enter dir ok"
+#define ENTER_DIR_FAILURED "enter dir failured:is not a dir"
+
 enum msg_type{
     msg_type_min = 0,
     msg_type_regist_request,    //注册请求
@@ -69,6 +78,18 @@ enum msg_type{
 
     msg_flushfile_request,  //刷新文件
     msg_flushfile_respon,
+
+    msg_deldir_request,    //删除文件夹
+    msg_deldir_respon,
+
+    msg_rename_dir_request,    //重命名文件
+    msg_rename_dir_respon,
+
+    msg_enter_dir_request,    //进入文件夹
+    msg_enter_dir_respon,
+
+    msg_upload_request,    //上传文件
+    msg_uploadr_respon,
 
     msg_type_max = 0x00ffffff
 };
