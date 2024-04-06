@@ -83,6 +83,11 @@ void friends::handgroupchat(pdu *Pdu)
     m_msgte->append(strmsg);
 }
 
+QListWidget *friends::getfriendlist()
+{
+    return m_friendlist;
+}
+
 void friends::showonline()
 {
     if(m_online->isHidden()){

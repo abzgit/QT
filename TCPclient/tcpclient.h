@@ -6,6 +6,7 @@
 #include <QTcpSocket>
 #include "protocol.h"
 #include "privatechat.h"
+#include<QFile>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class Tcpclient;
@@ -29,6 +30,8 @@ public:
     void handsearch(pdu *Pdu);
     void handaddrequest(pdu *Pdu);
     void setcurpath(QString curpath);
+    void handdownload(pdu *Pdu);
+    void handsharefile(pdu *Pdu);
 
 private:
     Ui::Tcpclient *ui;
@@ -37,6 +40,7 @@ private:
     QTcpSocket m_sock;
     QString logname;
     QString m_curpath;
+    QFile m_file;
 
 public slots:
     void showconnect();

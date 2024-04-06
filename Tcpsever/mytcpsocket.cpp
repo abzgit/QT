@@ -11,6 +11,9 @@ MyTcpSocket::MyTcpSocket(QObject *parent)
 {
     connect(this,SIGNAL(readyRead()),this,SLOT(recvmsg()));
     connect(this,SIGNAL(disconnected()),this,SLOT(clientoffline()));
+    m_upload = false;
+    mtimer = new QTimer;
+    connect(mtimer,SIGNAL(timeout()),this,SLOT(sendfile()));
 }
 
 QString MyTcpSocket::getname()
@@ -329,7 +332,27 @@ void MyTcpSocket::handenterdir(pdu *Pdu)
     }
 }
 
-void MyTcpSocket::recvmsg()
+void MyTcpSocket::handupload(pdu *Pdu)
+{
+    char dirname[32] = {'\0'};
+    qint64 filesize = 0;
+    sscanf(Pdu->caData,"%s %lld",dirname,&filesize);
+    char *path = new char[Pdu->uiMsgLen];
+    memcpy(path,Pdu->caMsg,Pdu->uiMsgLen);
+    QString nowpath = QString("%1/%2").arg(path).arg(dirname);
+    delete[] path;
+    path = NULL;
+    m_file.setFileName(nowpath);
+    //以只写的方式打开文件
+    if(m_file.open(QIODevice::WriteOnly)){
+        m_upload = true;
+        m_total = filesize;
+        m_recived = 0;
+
+    }
+}
+
+void MyTcpSocket::handnotfile()
 {
     uint uiPduLen = 0;
     this->read((char*)&uiPduLen,sizeof(uint));
@@ -407,8 +430,208 @@ void MyTcpSocket::recvmsg()
         handenterdir(Pdu);
         break;
     }
+    case msg_upload_request:{
+        handupload(Pdu);
+        break;
+    }
+    case msg_delfile_request:{
+        handdelfile(Pdu);
+        break;
+    }
+    case msg_download_request:{
+        handdownload(Pdu);
+        break;
+    }
+    case msg_sharefile_request:{
+        handsharefile(Pdu);
+        break;
+    }
+    case msg_sharefile_note_respon:{
+        handshareyes(Pdu);
+        break;
+    }
+    case msg_movefile_request:{
+        handmove(Pdu);
+        break;
+    }
     default:
         break;
+    }
+    free(Pdu);
+    Pdu = NULL;
+}
+
+void MyTcpSocket::handfile()
+{
+    pdu *respon = NULL;
+    respon = mkpud(0);
+    respon->uiMsgType = msg_uploadr_respon;
+    QByteArray buff = readAll();
+    m_file.write(buff);
+    m_recived += buff.size();
+    if(m_recived == m_total){
+        m_file.close();
+        m_upload = false;
+        strcpy(respon->caData,UPLOAD_FILE_OK);
+        write((char*)respon,respon->uiPDUlen);
+        free(respon);
+        respon = NULL;
+    }else if(m_recived > m_total){
+        strcpy(respon->caData,UPLOAD_FILE_FAILURED);
+        m_file.close();
+        m_upload = false;
+        write((char*)respon,respon->uiPDUlen);
+        free(respon);
+        respon = NULL;
+    }
+}
+
+void MyTcpSocket::handdelfile(pdu *Pdu)
+{
+    char dirname[32] = {'\0'};
+    strcpy(dirname,Pdu->caData);
+    char *path = new char[Pdu->uiMsgLen];
+    memcpy(path,Pdu->caMsg,Pdu->uiMsgLen);
+    QString nowpath = QString("%1/%2").arg(path).arg(dirname);
+    QFileInfo fileinfo(nowpath);
+    bool ret = false;
+    if(fileinfo.isDir()){
+        ret = false;
+    }else if(fileinfo.isFile()){
+        QDir dir;
+        ret = dir.remove(nowpath);
+    }
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_delfile_respon;
+    if(ret){
+        memcpy(respon->caData,DEL_FILE_OK,strlen(DEL_FILE_OK));
+    }else{
+        memcpy(respon->caData,DEL_FILE_FAILURED,strlen(DEL_FILE_FAILURED));
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handdownload(pdu *Pdu)
+{
+    char dirname[32] = {'\0'};
+    strcpy(dirname,Pdu->caData);
+    char *path = new char[Pdu->uiMsgLen];
+    memcpy(path,Pdu->caMsg,Pdu->uiMsgLen);
+    QString nowpath = QString("%1/%2").arg(path).arg(dirname);
+    QFileInfo Fileinfo(nowpath);
+    qint64 filesize = Fileinfo.size();
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_download_respon;
+    m_file.setFileName(nowpath);
+    sprintf(respon->caData,"%s %lld",dirname,filesize);
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+    mtimer->start(1000);
+    delete[] path;
+    path = NULL;
+}
+
+void MyTcpSocket::handsharefile(pdu *Pdu)
+{
+    char sendname[32] = {'\0'};
+    int num = 0;
+    sscanf(Pdu->caData,"%s %d",sendname,&num);
+    int size = num*32;
+    pdu *respon = mkpud(Pdu->uiMsgLen-size);
+    respon->uiMsgType = msg_sharefile_note;
+    strcpy(respon->caData,sendname);
+    memcpy(respon->caMsg,(char*)(Pdu->caMsg)+size,Pdu->uiMsgLen-size);
+    char recvname[32] = {'\0'};
+    for(int i = 0; i < num; ++i){
+        memcpy(recvname,(char*)(Pdu->caMsg)+i*32,32);
+        mytcpserver::getinstace().transend(recvname,respon);
+    }
+    free(respon);
+    respon = NULL;
+    respon = mkpud(0);
+    respon->uiMsgType = msg_sharefile_respon;
+    strcpy(Pdu->caData,"share file ok!");
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::handshareyes(pdu *Pdu)
+{
+    QString recvpath = QString("./%1").arg(Pdu->caData);
+    QString sharepath = QString("%1").arg((char*)(Pdu->caMsg));
+    int index = sharepath.lastIndexOf('/');
+    QString filename = sharepath.right(sharepath.size()-index-1);
+    recvpath = recvpath + "/" + filename;
+    QFileInfo file(sharepath);
+    if(file.isFile()){
+        QFile::copy(sharepath,recvpath);
+    }else if(file.isDir()){
+        handshardir(sharepath,recvpath);
+    }
+}
+
+void MyTcpSocket::handshardir(QString srcdir, QString desdir)
+{
+    QDir dir;
+    dir.mkdir(desdir);
+    dir.setPath(srcdir);
+    QFileInfoList fileinfolist = dir.entryInfoList();
+    QString srctmp,destmp;
+    for(int i = 0; i < fileinfolist.size(); ++i){
+        if(fileinfolist[i].isFile()){
+            srctmp = srcdir + '/' + fileinfolist[i].fileName();
+            destmp = desdir + '/' + fileinfolist[i].fileName();
+            QFile::copy(srctmp,destmp);
+        }else if(fileinfolist[i].isDir()){
+            srctmp = srcdir + '/' + fileinfolist[i].fileName();
+            destmp = desdir + '/' + fileinfolist[i].fileName();
+            handshardir(srctmp,destmp);
+        }
+    }
+}
+
+void MyTcpSocket::handmove(pdu *Pdu)
+{
+    char filename[32] = {'\0'};
+    int srclen = 0;
+    int deslen = 0;
+    sscanf(Pdu->caData,"%d %d %s",&srclen,&deslen,filename);
+    char *srcpath = new char[srclen+1];
+    char *despath = new char[deslen+1+32];
+    memset(srcpath,'\0',srclen+1);
+    memset(despath,'\0',deslen+1+32);
+    memcpy(srcpath,Pdu->caMsg,srclen);
+    memcpy(despath,(char*)(Pdu->caMsg) + (srclen + 1),deslen);
+    pdu *respon = mkpud(0);
+    respon->uiMsgType = msg_movefile_respon;
+    QFileInfo file(despath);
+    if(file.isDir()){
+        strcat(despath,"/");
+        strcat(despath,filename);
+        bool ret = QFile::rename(srcpath,despath);
+        if(ret){
+            strcpy(respon->caData,MOVE_FILE_OK);
+        }else{
+            strcpy(respon->caData,COMMON_ERROR);
+        }
+    }else if(file.isFile()){
+        strcpy(respon->caData,MOVE_FILE_FAILURED);
+    }
+    write((char*)respon,respon->uiPDUlen);
+    free(respon);
+    respon = NULL;
+}
+
+void MyTcpSocket::recvmsg()
+{
+    if(!m_upload){
+        handnotfile();
+    }else{
+        handfile();
     }
 }
 
@@ -417,4 +640,26 @@ void MyTcpSocket::clientoffline()
     opDB::getinstance().handoffline(m_name.toStdString().c_str());
     emit offline(this);
 
+}
+
+void MyTcpSocket::sendfile()
+{
+    mtimer->stop();
+    m_file.open(QIODevice::ReadOnly);
+    char *pdata = new char[4096];
+    qint64 ret = 0;
+    while(true){
+        ret = m_file.read(pdata,4096);
+        if(ret > 0 && ret <= 4096){
+            write(pdata,ret);
+        }else if(0 == ret){
+            m_file.close();
+            break;
+        }else if(ret < 0){
+            m_file.close();
+            break;
+        }
+    }
+    delete[] pdata;
+    pdata = NULL;
 }

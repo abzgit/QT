@@ -4,7 +4,9 @@
 #include <QTcpSocket>
 #include "protocol.h"
 #include <QDir>
-#include<QMessageBox>
+#include <QMessageBox>
+#include <QFile>
+#include <QTimer>
 
 class MyTcpSocket : public QTcpSocket
 {
@@ -29,11 +31,26 @@ public:
     void handdeldir(pdu *Pdu);
     void handrename(pdu *Pdu);
     void handenterdir(pdu *Pdu);
+    void handupload(pdu *Pdu);
+    void handnotfile();
+    void handfile();
+    void handdelfile(pdu *Pdu);
+    void handdownload(pdu *Pdu);
+    void handsharefile(pdu *Pdu);
+    void handshareyes(pdu *Pdu);
+    void handshardir(QString srcdir,QString desdir);
+    void handmove(pdu *Pdu);
 public slots:
     void recvmsg();
     void clientoffline();
+    void sendfile();
 private:
     QString m_name;
+    QFile m_file;
+    qint64 m_total;
+    qint64 m_recived;
+    bool m_upload;
+    QTimer *mtimer;
 };
 
 #endif // MYTCPSOCKET_H

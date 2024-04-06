@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <protocol.h>
+#include <QTimer>
 
 class book : public QWidget
 {
@@ -17,6 +18,12 @@ public:
     void handflushfile(pdu *Pdu);
     void clearmenterdir();
     QString getenterdir();
+    void setdownload(bool statu);
+    qint64 total;
+    qint64 recived;
+    bool getstatu();
+    QString getsavepath();
+    QString getsharename();
 
 signals:
 
@@ -31,17 +38,39 @@ private:
     QPushButton *m_delfile;
     QPushButton *m_downloadfile;
     QPushButton *m_sharefile;
+    QPushButton *movefile;
+    QPushButton *selectdesdir;
 
     QString m_enterdir;
+    QString m_uploadfilepath;
+
+    QTimer *m_timer;
+
+    QString m_savepath;
+    bool isdownload;
+
+    QString msharefilename;
+
+    QString movefilename;
+    QString movefilepath;
+    QString desdir;
+
 
 public slots:
     void creatdir();
     void flushfile();
-    void delfit();
+    void deldir();
     void renamedir();
     void enterdir(const QModelIndex &index);
     void returnpredir();
     void uploadfile();
+    void uploadfiledate();
+    void delfile();
+    void download();
+    void sharefile();
+    void movefileordir();
+    void selectdir();
+
 };
 
 #endif // BOOK_H

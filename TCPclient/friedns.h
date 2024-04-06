@@ -21,6 +21,7 @@ public:
     void handflush(pdu *Pdu);
     void handgroupchat(pdu *Pdu);
     QString m_searchname;
+    QListWidget *getfriendlist();
 public slots:
     void showonline();
     void searchuse();

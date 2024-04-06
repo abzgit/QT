@@ -26,14 +26,25 @@ typedef unsigned int uint;
 #define FILE_NAME_EXITED "file name exited!"
 #define CREATE_DIR_OK "create dir ok!"
 
-#define DEL_DIR_OK "delete dir ok!"
+#define DEL_DIR_OK "delete dir ok!"     //删除文件夹
 #define DEL_DIR_FAILURED "delete dir failured!"
 
-#define RENAME_FILE_OK "rename file ok!"
+#define RENAME_FILE_OK "rename file ok!"        //重命名文件
 #define RENAME_FILE_FAILURED "rename file failured"
 
-#define ENTER_DIR_OK "enter dir ok"
+#define ENTER_DIR_OK "enter dir ok"     //进入文件夹
 #define ENTER_DIR_FAILURED "enter dir failured:is not a dir"
+
+#define UPLOAD_FILE_OK "upload file ok!"        //上传文件
+#define UPLOAD_FILE_FAILURED "upload file failured!"
+
+#define DEL_FILE_OK "move file ok!"     //删除文件
+#define DEL_FILE_FAILURED "move file failured!"
+
+#define MOVE_FILE_OK "delete file ok!"     //移动文件
+#define MOVE_FILE_FAILURED "delete file failured!"
+
+#define COMMON_ERROR "System is busy"
 
 #endif // PROTOCOL_H
 
@@ -102,6 +113,20 @@ enum msg_type{
 
     msg_upload_request,    //上传文件
     msg_uploadr_respon,
+
+    msg_delfile_request,    //删除文件
+    msg_delfile_respon,
+
+    msg_download_request,    //下载文件
+    msg_download_respon,
+
+    msg_sharefile_request,    //分享文件
+    msg_sharefile_respon,
+    msg_sharefile_note,
+    msg_sharefile_note_respon,
+
+    msg_movefile_request,    //移动文件
+    msg_movefile_respon,
 
     msg_type_max = 0x00ffffff
 };

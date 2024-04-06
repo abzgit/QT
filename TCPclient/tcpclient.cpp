@@ -114,6 +114,41 @@ void Tcpclient::setcurpath(QString curpath)
     m_curpath = curpath;
 }
 
+void Tcpclient::handdownload(pdu *Pdu)
+{
+    char filename[32] = {'\0'};
+    sscanf(Pdu->caData,"%s %lld",filename,&(openwidget::getinstance().getbook()->total));
+    if(strlen(filename) > 0 && openwidget::getinstance().getbook()->total > 0){
+        openwidget::getinstance().getbook()->setdownload(true);
+        m_file.setFileName(openwidget::getinstance().getbook()->getsavepath());
+        if(!m_file.open(QIODevice::WriteOnly)){
+            QMessageBox::warning(this,"下载文件","获得保存文件路径失败");
+        }
+    }
+}
+
+void Tcpclient::handsharefile(pdu *Pdu)
+{
+    char *path = new char[Pdu->uiMsgLen];
+    memcpy(path,Pdu->caMsg,Pdu->uiMsgLen);
+    char * index = strrchr(path,'/');
+    if(NULL != index){
+        index++;
+        QString strnode = QString("%1 share file ->%2\n Do you accept?").arg(Pdu->caData).arg(index);
+        int ret = QMessageBox::question(this,"共享文件",strnode);
+        if(QMessageBox::Yes == ret){
+            pdu *respon =mkpud(Pdu->uiMsgLen);
+            respon->uiMsgType = msg_sharefile_note_respon;
+            memcpy(respon->caMsg,Pdu->caMsg,Pdu->uiMsgLen);
+            QString name = Tcpclient::getinstance().getlogname();
+            strcpy(respon->caData,name.toStdString().c_str());
+            m_sock.write((char*)respon,respon->uiPDUlen);
+            free(respon);
+            respon = NULL;
+        }
+    }
+}
+
 
 void Tcpclient::showconnect()
 {
@@ -122,6 +157,7 @@ void Tcpclient::showconnect()
 
 void Tcpclient::recvmag()
 {
+    if(!openwidget::getinstance().getbook()->getstatu()){
     uint uiPduLen = 0;
     m_sock.read((char*)&uiPduLen,sizeof(uint));
     uint uiMsgLen = uiPduLen - sizeof(pdu);
@@ -210,11 +246,53 @@ void Tcpclient::recvmag()
         QMessageBox::information(this,"进入文件夹",(char*)(Pdu->caData));
         break;
     }
+    case msg_uploadr_respon:{
+        QMessageBox::information(this,"上传文件",(char*)(Pdu->caData));
+        break;
+    }
+    case msg_delfile_respon:{
+        QMessageBox::information(this,"删除文件",(char*)(Pdu->caData));
+        break;
+    }
+    case msg_download_respon:{
+        handdownload(Pdu);
+        break;
+    }
+    case msg_sharefile_respon:{
+        QMessageBox::information(this,"共享文件",(char*)(Pdu->caData));
+        break;
+    }
+    case msg_sharefile_note:{
+        handsharefile(Pdu);
+        break;
+    }
+    case msg_movefile_respon:{
+        QMessageBox::information(this,"移动文件",(char*)(Pdu->caData));
+        break;
+    }
     default:
         break;
     }
     free(Pdu);
     Pdu = NULL;
+    }else{
+        QByteArray buffer = m_sock.readAll();
+        m_file.write(buffer);
+        book *tmpbook = openwidget::getinstance().getbook();
+        tmpbook->recived += buffer.size();
+        if(tmpbook->recived == tmpbook->total){
+            m_file.close();
+            tmpbook->recived = 0;
+            tmpbook->total = 0;
+            tmpbook->setdownload(false);
+        }else if(tmpbook->recived > tmpbook->total){
+            m_file.close();
+            tmpbook->recived = 0;
+            tmpbook->total = 0;
+            tmpbook->setdownload(false);
+            QMessageBox::critical(this,"下载文件","下载文件失败");
+        }
+    }
 }
 #if 0
 void Tcpclient::on_pushButton_clicked()
