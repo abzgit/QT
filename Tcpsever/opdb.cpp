@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QResource>
 #include <QSqlQuery>
+#include <QCryptographicHash>
 
 opDB::opDB(QObject *parent)
     : QObject{parent}
@@ -37,7 +38,12 @@ bool opDB::handregist(const char *name, const char *pwd)    //处理注册
     if(name == NULL || pwd == NULL){
         return false;
     }
-    QString sqlque = QString("insert into useinfo(name,pwd) values(\'%1\',\'%2\')").arg(name).arg(pwd);
+    QByteArray hash;
+    QCryptographicHash hashGenerator(QCryptographicHash::Md5);
+    hashGenerator.addData(pwd, strlen(pwd));
+    hash = hashGenerator.result();
+    char *hashpwd = hash.data();
+    QString sqlque = QString("insert into useinfo(name,pwd) values(\'%1\',\'%2\')").arg(name).arg(hashpwd);
     QSqlQuery query;
     return query.exec(sqlque);
 }
@@ -47,11 +53,16 @@ bool opDB::handlogin(const char *name, const char *pwd)     //处理登录
     if(name == NULL || pwd == NULL){
         return false;
     }
-    QString sqlque = QString("select * from useinfo where name = \'%1\' and pwd = \'%2\' and online = 0").arg(name).arg(pwd);
+    QByteArray hash;
+    QCryptographicHash hashGenerator(QCryptographicHash::Md5);
+    hashGenerator.addData(pwd, strlen(pwd));
+    hash = hashGenerator.result();
+    char *hashpwd = hash.data();
+    QString sqlque = QString("select * from useinfo where name = \'%1\' and pwd = \'%2\' and online = 0").arg(name).arg(hashpwd);
     QSqlQuery quey;
     quey.exec(sqlque);
     if(quey.next()){
-        sqlque = QString("update useinfo set online = 1 where name = \'%1\' and pwd = \'%2\'").arg(name).arg(pwd);
+        sqlque = QString("update useinfo set online = 1 where name = \'%1\'").arg(name);
         QSqlQuery quey;
         quey.exec(sqlque);
         return true;
